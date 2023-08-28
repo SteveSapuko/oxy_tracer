@@ -8,13 +8,6 @@ pub enum Primitive {
 }
 
 #[derive(Debug, Clone)]
-pub enum Light {
-    Ambient(f64),
-    Point(V3, f64),
-    Directional(V3, f64),
-}
-
-#[derive(Debug, Clone)]
 pub struct Sphere {
     pub center: V3,
     pub radius: f64,
@@ -24,6 +17,7 @@ pub struct Sphere {
 }
 pub trait Collideable {
     fn ray_intersection(&self, ray: Ray) -> Option<(f64, f64)>;
+    fn normal_at_point(&self, point: V3) -> V3;
 }
 
 impl Collideable for Sphere {
@@ -51,12 +45,22 @@ impl Collideable for Sphere {
 
         return Some((t1, t2));
     }
+
+    fn normal_at_point(&self, point: V3) -> V3 {
+        (point - self.center).normalize()
+    }
 }
 
 impl Collideable for Primitive {
     fn ray_intersection(&self, ray: Ray) -> Option<(f64, f64)> {
         match self {
-            Primitive::Sphere(p) => p.ray_intersection(ray)
+            Primitive::Sphere(s) => s.ray_intersection(ray)
+        }
+    }
+
+    fn normal_at_point(&self, point: V3) -> V3 {
+        match self {
+            Primitive::Sphere(s) =>s.normal_at_point(point),
         }
     }
 }
