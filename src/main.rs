@@ -14,10 +14,12 @@ use image::{RgbImage, Rgb, ImageBuffer};
 use scene::*;
 use primitives::*;
 
+use nalgebra::{Vector3, Rotation3, vector};
+use std::ops::Mul;
 
 fn main() {
-    let canvas_width: i32 = 400;
-    let canvas_height: i32 = 400;
+    let canvas_width: i32 = 2000;
+    let canvas_height: i32 = 2000;
 
     let viewframe_width: f64 = 1.0;
     let viewframe_height: f64 = 1.0;
@@ -26,6 +28,8 @@ fn main() {
     let camera = vec3::new(0.0, 0.0, 0.0);
     let ambient_light: f64 = 0.2;
 
+    let rotation = Rotation3::from_euler_angles(0.0, 0.0, 0.0);
+    
     let mut scene: Scene = scene::new_scene();
     init_scene(&mut scene);   
     let mut img = RgbImage::new(canvas_width as u32, canvas_height as u32);
@@ -37,8 +41,13 @@ fn main() {
             let viewframe_x:f64 = image_x as f64 * (viewframe_width / canvas_width as f64);
             let viewframe_y:f64 = image_y as f64 * (viewframe_height / canvas_height as f64);
 
-            let ray = ray::new(camera, vec3::new(viewframe_x, viewframe_y, viewframe_distance)); //ray from the camera to a physical point on the viewframe
+            let na_ray = vector![viewframe_x, viewframe_y, viewframe_distance];
+            let rotated_ray = rotation.mul(na_ray);
+
+            let ray = ray::new(camera, vec3::new(rotated_ray[0], rotated_ray[1], rotated_ray[2])); //ray from the camera to a physical point on the viewframe
             
+            
+
             let draw_color: Rgb<u8> = match ray.closest_point(&scene.primitives, 1.0, INF) { //returns first point ray intersects, and clone of the primitive it belongs to
                 Some(temp) => {
                     let point: V3 = temp.0;
@@ -121,7 +130,7 @@ fn draw_pixel(img: &mut RgbImage, x: i32, y: i32, draw_color: Rgb<u8>) {
     let corrected_x: i32 = img.width() as i32 / 2 + x;
     let corrected_y: i32 = img.height() as i32 / 2 - y; 
 
-    println!("Drawing at: x({}), y({})", corrected_x, corrected_y);
+    //println!("Drawing at: x({}), y({})", corrected_x, corrected_y);
 
     img.put_pixel(corrected_x as u32, (corrected_y - 1) as u32, draw_color);
 }
