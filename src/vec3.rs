@@ -91,7 +91,7 @@ pub fn cross(v: V3, w: V3) -> V3 {
     }
 }
 
-pub fn new(x: f64, y: f64, z: f64) -> V3 {
+pub fn new_vec(x: f64, y: f64, z: f64) -> V3 {
     V3 {
         x: x,
         y: y,
