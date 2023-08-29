@@ -36,7 +36,7 @@ impl Ray {
 
         return match closest_primitive {
             None => None,
-            Some(p) => {Some((self.point_at_scale(closest_t), p.clone()))}
+            Some(p) => Some((self.point_at_scale(closest_t), p.clone()))
         };      
     }
 }
@@ -46,4 +46,8 @@ pub fn new(origin: V3, direction: V3) -> Ray{
         origin: origin,
         direction: direction,
     }
+}
+
+pub fn reflect_ray(ray: V3, surface_normal: V3) -> V3{
+    2.0 * surface_normal * dot(surface_normal, ray) - ray
 }

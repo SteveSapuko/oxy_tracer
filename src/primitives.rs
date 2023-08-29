@@ -11,9 +11,9 @@ pub enum Primitive {
 pub struct Sphere {
     pub center: V3,
     pub radius: f64,
-    pub color: Rgb<u8>,
-    pub specular: i32, //larger value is more shiny.
-    pub reflective: f32, //value should be between 0 and 1. 1 is a mirror.
+    pub color: V3,
+    pub specular: f64, //larger value is more shiny.
+    pub reflective: f64, //value should be between 0 and 1. 1 is a mirror.
 }
 pub trait Collideable {
     fn ray_intersection(&self, ray: Ray) -> Option<(f64, f64)>;
@@ -66,15 +66,27 @@ impl Collideable for Primitive {
 }
 
 impl Primitive {
-    pub fn color(&self) -> Rgb<u8> {
+    pub fn color(&self) -> V3 {
         match self {
             Primitive::Sphere(t) => t.color
+        }
+    }
+
+    pub fn specular(&self) -> f64 {
+        match self {
+            Primitive::Sphere(t) => t.specular
+        }
+    }
+
+    pub fn reflective(&self) -> f64 {
+        match self {
+            Primitive::Sphere(t) => t.reflective
         }
     }
 }
 
 //reflective value is between 0 and 1
-pub fn new_sphere(center: V3, radius: f64, color: Rgb<u8>, specular: i32, reflective: f32) -> Primitive {
+pub fn new_sphere(center: V3, radius: f64, color: V3, specular: f64, reflective: f64) -> Primitive {
     Primitive::Sphere(
         Sphere {
             center: center,

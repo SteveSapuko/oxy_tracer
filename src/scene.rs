@@ -4,6 +4,7 @@ use crate::primitives::*;
 pub struct Scene {
     pub primitives: Vec<Primitive>,
     pub lights: Vec<Light>,
+    pub ambient_light: f64,
 }
 
 #[derive(Debug, Clone)]
@@ -25,5 +26,6 @@ pub fn new_scene() -> Scene{
     Scene {
         primitives: Vec::new(),
         lights: Vec::new(),
+        ambient_light: 0.0,
     }
 }
