@@ -5,6 +5,15 @@ pub struct Scene {
     pub primitives: Vec<Primitive>,
     pub lights: Vec<Light>,
     pub ambient_light: f64,
+
+    pub canvas_width: i32,
+    pub canvas_height: i32,
+
+    pub viewframe_width: f64,
+    pub viewframe_height: f64,
+    pub viewframe_distance: f64,
+
+    pub camera: V3,
 }
 
 #[derive(Debug, Clone)]
@@ -27,5 +36,11 @@ pub fn new_scene() -> Scene{
         primitives: Vec::new(),
         lights: Vec::new(),
         ambient_light: 0.0,
+        canvas_width: 0,
+        canvas_height: 0,
+        viewframe_width: 0.0,
+        viewframe_height: 0.0,
+        viewframe_distance: 0.0,
+        camera: new_vec(0.0, 0.0, 0.0),
     }
 }
