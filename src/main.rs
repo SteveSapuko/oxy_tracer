@@ -12,6 +12,7 @@ use image::{RgbImage, Rgb, ImageBuffer};
 use scene::*;
 use primitives::*;
 use util::*;
+use rayon::prelude::*;
 
 use nalgebra::{Vector3, Rotation3, vector};
 use std::ops::Mul;
@@ -21,14 +22,18 @@ const MAX_COLOR_DIFFERENCE: f64 = 10.0;
 fn main() {
     let now = std::time::Instant::now();
     
-    let rotation: Rotation3<f64> = Rotation3::from_euler_angles(0.0, 0.0, 0.0);
+    let rotation: Rotation3<f64> = Rotation3::from_euler_angles(0.0, -0.25, 0.0);
     
     let mut scene: Scene = scene::new_scene();
     init_scene(&mut scene);   
     let mut img = RgbImage::new(scene.canvas_width as u32, scene.canvas_height as u32);
 
+    //draw entire image without supersampling (1 ray per pixel)
     let mut times = 0;
-    for canvas_x in -scene.canvas_width/2 .. scene.canvas_width/2  { //draw entire image without supersampling (1 ray per pixel)
+
+    img.enumerate_pixels().into_par_iter().for_each(|canvas_x| 
+
+      { 
         for canvas_y in -scene.canvas_height/2 .. scene.canvas_height/2 {
 
             let draw_color = generate_pixel(&scene,
@@ -39,11 +44,14 @@ fn main() {
             let draw_color = v3_to_rgb(draw_color);
             draw_pixel(&mut img, canvas_x, canvas_y, draw_color).unwrap();
         }
-    } 
+    }
+    );
+
 
     /*Goes through generated image. Regenerates pixels that have high variation from their neighbors with supersampling.
     For simplicity, only checks pixels that have 8 neighbors*/
     
+    println!("Starting Redrawing Phase");
     for canvas_x in 1 .. scene.canvas_width - 1 {
         for canvas_y in 1 .. scene.canvas_height -1{
             let current_color = img.get_pixel(canvas_x as u32, canvas_y as u32);
@@ -86,7 +94,6 @@ fn main() {
     img.save("output.png").unwrap();
 }
 
-
 fn generate_pixel(scene: &Scene, current: (i32, i32), rotation: &Rotation3<f64>, n_samples: i8) -> V3 {
     //divides each pixel into subpixels (n_samples + 1)^2 big
     let mut final_color: V3 = new_vec(0.0, 0.0, 0.0);
@@ -101,7 +108,7 @@ fn generate_pixel(scene: &Scene, current: (i32, i32), rotation: &Rotation3<f64>,
             //after rotation, we'll convert it back to V3 (I should have just used nalgebra from the beginning)
 
             let ray = new_ray(scene.camera, new_vec(rotated_ray[0], rotated_ray[1], rotated_ray[2])); //ray from the camera to a physical point on the viewframe
-            let draw_color = trace_ray(&scene, ray, EPSILON, INF, 3);
+            let draw_color = trace_ray(&scene, ray, EPSILON, INF, scene.recursion_limit);
 
             let divisions_in_pixel = match n_samples {
                 1 => 1,
@@ -116,44 +123,53 @@ fn generate_pixel(scene: &Scene, current: (i32, i32), rotation: &Rotation3<f64>,
 }
 
 fn init_scene(scene: &mut Scene) {
-    scene.canvas_width = 1920;
-    scene.canvas_height = 1080;
+    scene.canvas_width = 1920 * 20;
+    scene.canvas_height = 1080 * 20;
+
+    scene.recursion_limit = 8;
     
     scene.viewframe_width = 2.0;
     scene.viewframe_height = 1.125;
     scene.viewframe_distance = 1.0;
 
-    scene.camera = new_vec(0.0, 0.0, 0.0);
+    scene.camera = new_vec(1.0, 0.0, 0.0);
     
-    scene.primitives.push(new_sphere(
+    scene.primitives.push(new_sphere( //red
         new_vec(0.0, -1.0, 3.0),
         1.0,
         new_vec(255.0, 0.0, 0.0),
         500.0,
         0.0));
     
-    scene.primitives.push(new_sphere(
+    scene.primitives.push(new_sphere( //blue
         new_vec(2.0, 0.0, 4.0),
         1.0,
         new_vec(0.0, 0.0, 255.0),
         500.0,
-        0.0));
+        1.0));
     
-    scene.primitives.push(new_sphere(
+    scene.primitives.push(new_sphere( //green
         new_vec(-2.0, 0.0, 4.0),
         1.0,
         new_vec(0.0, 255.0, 0.0),
         10.0,
         0.0));
 
-    scene.primitives.push(new_sphere(
-        new_vec(0.0, 3.0, 8.0),
+    scene.primitives.push(new_sphere( //mirror
+        new_vec(0.0, 3.0, 6.0),
         2.0,
         new_vec(255.0 ,0.0,255.0),
         500.0,
         1.0));
 
-    scene.primitives.push(new_sphere(
+    scene.primitives.push(new_sphere( //sussy
+        new_vec(0.0, 0.0, -4.9),
+        5.0,
+        new_vec(200.0, 230.0, 255.0),
+        1000.0,
+        0.0));
+
+    scene.primitives.push(new_sphere( //ground
         new_vec(0.0, -5001.0, 0.0),
         5000.0,
         new_vec(255.0, 255.0, 0.0),

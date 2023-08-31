@@ -14,6 +14,7 @@ pub struct Scene {
     pub viewframe_distance: f64,
 
     pub camera: V3,
+    pub recursion_limit: i32,
 }
 
 #[derive(Debug, Clone)]
@@ -42,5 +43,6 @@ pub fn new_scene() -> Scene{
         viewframe_height: 0.0,
         viewframe_distance: 0.0,
         camera: new_vec(0.0, 0.0, 0.0),
+        recursion_limit: 0,
     }
 }
